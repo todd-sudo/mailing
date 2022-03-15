@@ -36,12 +36,28 @@ License: MIT
     sudo ./scripts/build_local.sh
    ```
    
+
 2. Запуск проекта:
     ```
    sudo ./scripts/up_local.sh
+   ```
+
+3. Создание суперпользователя:
+    ```
+   sudo ./scripts/manage_local.sh createsuperuser
    ```
    
 <br>
 
 #### P.S. : Нужно перейти в `Административную панель - Periodic Tasks` и убедиться в наличие celery задачи - `Check Tasks`.
 
+### Стек:
+
+1. Django Rest Framework
+2. Celery & Django Celery Beat
+3. Flower
+4. Docker & Docker compose
+5. Swagger
+6. Django Cookiecutter
+7. Postgres
+8. Traefik
