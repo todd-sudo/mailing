@@ -12,8 +12,13 @@ class MailingList(models.Model):
         null=True,
         blank=True
     )
-    date_stop = models.DateTimeField(
-        "Время окончания", )
+    operator_code = models.PositiveIntegerField(
+        "Код оператора",
+        null=True,
+        blank=True
+    )
+    tag = models.CharField("Тег", max_length=100, null=True, blank=True)
+    date_stop = models.DateTimeField("Время окончания")
 
     def __str__(self):
         return f"{self.external_id}"
@@ -65,10 +70,9 @@ class Message(models.Model):
         verbose_name="Рассылка",
         related_name="messages",
     )
-    client = models.ForeignKey(
+    clients = models.ManyToManyField(
         Client,
-        on_delete=models.CASCADE,
-        verbose_name="Клиент",
+        verbose_name="Клиенты",
         related_name="messages",
     )
 

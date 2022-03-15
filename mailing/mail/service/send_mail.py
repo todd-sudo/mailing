@@ -15,8 +15,12 @@ def send_message(message_id: int, phone: Union[int, str], text_message: str):
     }
     headers = {
         "Authorization": token,
+        "Content-Type": "application/json",
+        "accept": "application/json"
     }
     response = requests.post(url=url, json=data, headers=headers)
+    print(response.status_code)
+    print(response.json())
     return response
 
 

@@ -8,7 +8,8 @@ from .views import (
     MailingUpdateView,
     MailingDestroyView,
 
-    MailingView
+    MailingListView,
+    MailingListClientsListView
 )
 
 
@@ -20,7 +21,7 @@ urlpatterns = [
     path("create-mailing/", MailingCreateView.as_view(), name="create-mailing"),
     path("update-mailing/<int:id>/", MailingUpdateView.as_view(), name="update-mailing"),
     path("destroy-mailing/<int:id>/", MailingDestroyView.as_view(), name="destroy-mailing"),
-
-    path("list-mailing/", MailingView.as_view(), name="list-mailing"),
+    path("list-mailing/", MailingListView.as_view(), name="list-mailing"),
+    path("list-clients-mailing/<int:id>/", MailingListClientsListView.as_view(), name="list-clients-mailing"),
 ]
 
