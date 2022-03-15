@@ -63,6 +63,7 @@ class Message(models.Model):
         "Время создания сообщения",
         auto_now_add=True,
     )
+    # зачем status?
     status = models.BooleanField("Статус отправки", default=False)
     mailing_list = models.ForeignKey(
         MailingList,
