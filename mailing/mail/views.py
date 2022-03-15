@@ -2,25 +2,19 @@ import datetime
 import pytz
 import uuid
 
-
 from rest_framework import generics, status
-from django.db.models import Prefetch, Q
+from django.db.models import Q
 from rest_framework.response import Response
 
-from django.conf import settings
-
-from config import celery_app
 from .models import Client, Message, MailingList
 from .serializers import (
     ClientCreateUpdateSerializer,
     MailingCreateUpdateSerializer, ClientSerializer,
 )
-from .service.send_mail import send_message
-from .tasks import send_message_task
 
 
 # TODO: Сделать через ViewSet
-
+from .utils import create_task_message_send
 
 local_tz = pytz.timezone('Europe/Moscow')
 
@@ -92,17 +86,15 @@ class MailingCreateView(generics.CreateAPIView):
         new_message.clients.add(*clients)
 
         for client in clients:
-            send_message_task.apply_async(
-                (
-                    new_message.pk,
-                    ml.text,
-                    int(client.phone),
-                ),
-                {},
+            task = create_task_message_send(
+                name_task=f"task_{uuid.uuid4().hex}",
+                text_message=ml.text,
+                message_id=new_message.pk,
+                phone=int(client.phone),
                 start_time=date_start,
-                expires=date_stop
+                expires=date_stop,
             )
-        # else:
+            print(task)
 
         return Response(
             serializer.data,
