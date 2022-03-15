@@ -11,17 +11,7 @@ from .serializers import (
     ClientCreateUpdateSerializer,
     MailingCreateUpdateSerializer, ClientSerializer,
 )
-
-
-# TODO: Сделать через ViewSet
-from .utils import create_task_message_send
-
-local_tz = pytz.timezone('Europe/Moscow')
-
-
-def utc_to_local(utc_dt):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
-    return local_tz.normalize(local_dt)
+from .utils import create_task_message_send, local_tz, utc_to_local
 
 
 # Client
