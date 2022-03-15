@@ -1,5 +1,4 @@
 import datetime
-import pytz
 import uuid
 
 from rest_framework import generics, status
@@ -9,9 +8,12 @@ from rest_framework.response import Response
 from .models import Client, Message, MailingList
 from .serializers import (
     ClientCreateUpdateSerializer,
-    MailingCreateUpdateSerializer, ClientSerializer,
+    MailingCreateUpdateSerializer,
+    ClientSerializer,
+    MailingDetailSerializer,
 )
-from .utils import create_task_message_send, local_tz, utc_to_local
+from .utils import create_task_message_send, utc_to_local
+from logger.logger import logger
 
 
 # Client
@@ -53,28 +55,24 @@ class MailingCreateView(generics.CreateAPIView):
         mail_external_id = dict(serializer.data).get("external_id")
         ml = MailingList.objects.get(external_id=mail_external_id)
 
-        date_now = datetime.datetime.now(local_tz)
         date_start = utc_to_local(ml.date_start)
         date_stop = utc_to_local(ml.date_stop)
 
-        print(date_now)
-        print(date_start)
-        print(date_stop)
-
-        # if date_start < date_now < date_stop:
         clients = Client.objects.filter(
             Q(tag=ml.tag) | Q(operator_code=ml.operator_code)
         )
-        print(clients)
+        logger.info(f"Рассылка: {ml.external_id}|Клиентов: {len(clients)}")
+
         new_message = Message.objects.create(
             external_id=uuid.uuid4(),
             create_at=datetime.datetime.now(),
             status=True,
             mailing_list=ml,
         )
-
+        logger.info(f"Сообщение: {new_message} создано")
         new_message.clients.add(*clients)
 
+        tasks = []
         for client in clients:
             task = create_task_message_send(
                 name_task=f"task_{uuid.uuid4().hex}",
@@ -84,11 +82,24 @@ class MailingCreateView(generics.CreateAPIView):
                 start_time=date_start,
                 expires=date_stop,
             )
-            print(task)
-
+            logger.info(f"Задача: {task} создана")
+            tasks.append(task)
+        logger.info(f"Всего задач: {len(tasks)}")
+        if tasks:
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED,
+                headers=headers
+            )
+        logger.error(
+            "Рассылка не запущена, нет клиентов, попадающих под фильтры"
+        )
         return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
+            {
+                "detail": "рассылка не запущена, нет клиентов, "
+                          "попадающих под фильтры"
+            },
+            status=status.HTTP_400_BAD_REQUEST,
             headers=headers
         )
 
@@ -121,11 +132,18 @@ class MailingListClientsListView(generics.ListAPIView):
 
 
 class MailingListView(generics.ListAPIView):
-    """ Просмотра списка рассылок
+    """ Просмотр списка рассылок
     """
     serializer_class = MailingCreateUpdateSerializer
 
     def get_queryset(self):
-        queryset = MailingList.objects.prefetch_related("messages")
+        queryset = MailingList.objects.all()
         return queryset
 
+
+class MailingDetailView(generics.RetrieveAPIView):
+    """ Просмотр детальной информации о рассылке
+    """
+    serializer_class = MailingDetailSerializer
+    lookup_field = "id"
+    queryset = MailingList.objects.all()

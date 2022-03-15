@@ -1,5 +1,4 @@
 import datetime
-import time
 from typing import Union
 
 from config import celery_app
@@ -7,6 +6,7 @@ from mailing.mail.service.send_mail import send_message
 from django_celery_beat.models import PeriodicTask
 
 from mailing.mail.utils import local_tz, utc_to_local
+from logger.logger import logger
 
 
 @celery_app.task(
@@ -23,13 +23,13 @@ def send_message_task(
         phone: Union[int, str],
         text_message: str
 ):
-    response = send_message(
+    """ Таска для отправки сообщений на сторонний сервис
+    """
+    send_message(
         message_id=message_id,
         phone=phone,
         text_message=text_message
     )
-    if response.status_code == 200:
-        print(f"is task status code {response.status_code}")
 
 
 @celery_app.task(
@@ -41,16 +41,17 @@ def send_message_task(
     time_limit=60 * 30,
 )
 def check_tasks_task(self):
+    """ Таска, которая удаляет не нужные таски для рассылки
+    """
     tasks = PeriodicTask.objects.all()
     date = datetime.datetime.now(local_tz)
 
-    del_tasks: list = []
     for task in tasks:
         if task.expires is not None:
             task_expires = utc_to_local(task.expires)
             if date > task_expires:
                 task.delete()
-                print(f"Task - {task} deleted..")
+                logger.info(f"Task - {task} deleted..")
 
 
 

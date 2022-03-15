@@ -6,49 +6,51 @@ from .models import Client, MailingList, Message
 
 
 class ClientCreateUpdateSerializer(serializers.ModelSerializer):
-
+    """ Serializer для Создания, Обновление Клиентов
+   """
     class Meta:
         model = Client
         exclude = ["id"]
 
 
-class MailingSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = MailingList
-        fields = "__all__"
-
-
 class ClientSerializer(serializers.ModelSerializer):
-
+    """ Serializer для Клиента
+    """
     class Meta:
         model = Client
         fields = "__all__"
 
 
-class MessageSerializer(serializers.ModelSerializer):
-    # clients = ClientSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Message
-        fields = "__all__"
-
-
 class MailingCreateUpdateSerializer(serializers.ModelSerializer):
-    # external_id = serializers.UUIDField(default=uuid.uuid4())
-    # date_start = serializers.DateTimeField(required=True)
-    # text = serializers.CharField(max_length=500, required=True)
-    # date_stop = serializers.DateTimeField()
+    """ Serializer для Создания, Обновление, показа Списка Рассылок
+    """
 
     class Meta:
         model = MailingList
-        fields = [
-            "external_id",
-            "date_start",
-            "text",
-            "date_stop",
-            "operator_code",
-            "tag"
-        ]
+        fields = "__all__"
 
 
+class MessageListSerializer(serializers.ModelSerializer):
+    clients = ClientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Message
+        fields = ["external_id", "create_at", "status", "clients"]
+
+
+class MailingDetailSerializer(serializers.ModelSerializer):
+    """ Serializer
+    """
+    messages = MessageListSerializer(many=True, read_only=True)
+    count_client = serializers.SerializerMethodField()
+    count_message = serializers.SerializerMethodField()
+
+    def get_count_message(self, obj):
+        return Message.objects.filter(mailing_list=obj).count()
+
+    def get_count_client(self, obj):
+        return Client.objects.filter(messages__mailing_list=obj).count()
+
+    class Meta:
+        model = MailingList
+        fields = "__all__"

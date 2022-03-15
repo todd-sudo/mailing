@@ -13,9 +13,12 @@ def create_task_message_send(
         start_time,
         expires,
 ):
+    """ Создает таски для отправки сообщений
+    """
+    # в тестовых целях отправляет запрос каждую минуту
     schedule, created_interval = IntervalSchedule.objects.get_or_create(
-        every=3,
-        period=IntervalSchedule.SECONDS,
+        every=1,
+        period=IntervalSchedule.MINUTES,
     )
     task = PeriodicTask.objects.create(
         interval=schedule,
@@ -37,5 +40,10 @@ local_tz = pytz.timezone('Europe/Moscow')
 
 
 def utc_to_local(utc_dt):
+    """ Преобразует UTC в Europe/Moscow
+    """
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
     return local_tz.normalize(local_dt)
+
+
+

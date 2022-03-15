@@ -9,7 +9,8 @@ from .views import (
     MailingDestroyView,
 
     MailingListView,
-    MailingListClientsListView
+    MailingListClientsListView,
+    MailingDetailView
 )
 
 
@@ -23,5 +24,6 @@ urlpatterns = [
     path("destroy-mailing/<int:id>/", MailingDestroyView.as_view(), name="destroy-mailing"),
     path("list-mailing/", MailingListView.as_view(), name="list-mailing"),
     path("list-clients-mailing/<int:id>/", MailingListClientsListView.as_view(), name="list-clients-mailing"),
+    path("detail-mailing/<int:id>/", MailingDetailView.as_view(), name="detail-mailinglist"),
 ]
 
